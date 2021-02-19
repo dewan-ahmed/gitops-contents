@@ -95,7 +95,7 @@ At this point, you'll still see the default login screen with no option for SSO.
 
 ![default login with no SSO](../assets/images/rhsso-argocd/argocd-default-login.png)
 
-1. Creating a new client in Keycloak
+4. Creating a new client in Keycloak
 
 First we need to set up a new Keycloak client. Start by logging into your Keycloak server, select the realm you want to use (myrealm is the one we just created) and then go to **Clients** and click the **create** button top right.
 
@@ -126,6 +126,135 @@ Once you've created the client scope you can now add a Token Mapper which will a
 We can now configure the client to provide the `groups` scope. You can now assign the groups scope either to the `Assigned Default Client Scopes` or to the `Assigned Optional Client Scopes`. If you put it in the Optional category you will need to make sure that ArgoCD requests the scope in it's OIDC configuration. Let's use `Assigned Default Client Scopes` by selecting `groups` from the `Available Client Scopes` and clicking `Add selected` option.
 
 ![assign default client scope](../assets/images/rhsso-argocd/add-default-client-scopes.png)
+
+6. Adding current user to ArgoCDAdmins group
+   
+Create a group called `ArgoCDAdmins` and have your current user join the group.
+
+![ArgoCDAdmins](../assets/images/rhsso-argocd/ArgoCDAdmins.png)
+
+7. Configuring ArgoCD OIDC
+
+Let's start by storing the client secret you generated earlier in step4 in the argocd secret `argocd-secret` under `openshift-gitops` project.
+
+First you'll need to encode the client secret in base64:
+```
+$ echo -n '83083958-8ec6-47b0-a411-a8c55381fbd2' | base64
+```
+> Be sure to replace the above sample secret with your base64 client secret
+ 
+ From the developer perspective under `openshift-gitops` project, go to `Secrets` tab and click on `argocd-secret`. Click on `YAML` and add the following value under `spec/data` section:
+
+```
+oidc.keycloak.clientSecret: <add the base64 client secret here>
+```
+Click `Save`.
+
+Next, go to `ConfigMaps` tab and click on `argocd-cm`. Add the following codeblock under `spec` section:
+
+```
+oidcConfig: |
+    name: Keycloak
+    issuer: https://keycloak.example.com/auth/realms/myrelam
+    clientID: argocd
+    clientSecret: $oidc.keycloak.clientSecret
+    requestedScopes: ["openid", "profile", "email", "groups"]
+```
+> Make sure that: `issuer` ends with the correct realm (in this example myrealm), `clientID` is set to the Client ID you configured in Keycloak, `clientSecret` points to the right key you created in the `argocd-secret` secret and `requestedScopes` contains the groups claim if you didn't add it to the Default scope.
+
+8. Login via Keycloak
+
+At this step, you can refresh the ArgoCD server login page and you will see a **LOGIN VIA KEYCLOAK** button. You can use `myuser/12345` credential to log in. This is the keycloak user we created in step1.
+
+9. Create an OpenShift OAuthClient
+
+Create and modify the following YAML:
+
+```
+kind: OAuthClient
+apiVersion: oauth.openshift.io/v1
+metadata:
+ name: keycloak-broker 
+secret: abcd1234 
+redirectURIs:
+- "<Your keycloak server URL>/auth/realms/myrealm/broker/openshift-v4/endpoint" 
+grantMethod: prompt
+```
+> Be sure to substitute your keycloak server URL under `redirectURIs` field. `abcd1234` is used as a sample secret and you can choose your own
+
+Save the above YAML as oauthclient.yaml and execute:
+```
+oc apply -f oauthclient.yaml -n keycloak
+```
+
+10. Create OpenShift v4 identity provider on keycloak
+
+From the keycloak admin console, go to identity providers tab and create a new `openshift v4` identity provider:
+
+![openshift-identity-provider](../assets/images/rhsso-argocd/openshift-identity-provider.png)
+
+Observe that the `Client ID` and `Client Secret` are coming from the above oauthclient.yaml file. The default scope is set to `user:info` but you can set your desired scope based on the [doc](https://docs.openshift.com/container-platform/3.3/admin_guide/scoped_tokens.html#admin-guide-scoped-tokens-user-scopes). 
+
+The `Base URL` is the openshift API server URL and here is how to find it for your cluster:
+
+![copy-login-command](../assets/images/rhsso-argocd/copy-login-command.png)
+
+![openshift-api-server-url](../assets/images/rhsso-argocd/server-url.png)
+
+Once you enter all the fields according to the screenshot above, hit `Save`.
+
+11. Create OpenShift user via htpasswd
+
+Create a password `12345` for the user `dewan` and stores this info to the file `htpasswd`
+```
+htpasswd -c -B -b htpasswd dewan 12345
+```
+
+While you're connected to your openshift cluster, execute from the terminal:
+
+```
+oc create secret generic htpass-secret --from-file=htpasswd=htpasswd -n openshift-config
+```
+
+Create the following YAML to add a new oauth CR:
+
+```
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: my_htpasswd_provider
+    mappingMethod: claim
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpass-secret
+```
+
+Execute:
+
+```
+ oc apply -f htpasswd-cr.yaml
+```
+
+12. Log in to ArgoCD using OpenShift
+
+Navigate to your ArgoCD server URL (you might need to open this in an incognito window to avoid caching). Once you click **LOGIN VIA OPENSHIFT**, you'll be taken to a keycloak page with a button **OPENSHIFT LOGIN**. Click this button and you'll be redirected to your openshift login page where you can use `dewan/12345` credential to log in (configured via htpasswd).
+
+![authorize-access](../assets/images/rhsso-argocd/authorize-access.png)
+
+You will need to authorize access for the first time.
+
+
+
+
+
+
+
+
+
 
 
 
