@@ -11,7 +11,11 @@ tags:
   - gitops
 ---
 
+This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [ArgoCD](https://argoproj.github.io/argo-cd/) application.
+
 ## Why SSO?
+
+[SSO](https://developers.redhat.com/blog/2016/10/04/how-red-hat-re-designed-its-single-sign-on-sso-architecture-and-why/) is the preferred, if not the only, way of authentication for most enterprise applications. From the user perspective, SSO offers speed and convenience i.e. you only need to authenticate once. The most important consideration from the business is the security SSO offers. SSO reduces the attack vector because users only log in via a specific channel. 
 
 
 ## What are you options for OpenShift AuthN/AuthZ?
