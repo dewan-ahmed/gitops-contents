@@ -11,16 +11,18 @@ tags:
   - gitops
 ---
 
-This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [ArgoCD](https://argoproj.github.io/argo-cd/) application.
+This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On(RHSSO)](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [ArgoCD](https://argoproj.github.io/argo-cd/) application.
 
 ## Why SSO?
 
 [SSO](https://developers.redhat.com/blog/2016/10/04/how-red-hat-re-designed-its-single-sign-on-sso-architecture-and-why/) is the preferred, if not the only, way of authentication for most enterprise applications. From the user perspective, SSO offers speed and convenience i.e. you only need to authenticate once. The most important consideration from the business is the security SSO offers. SSO reduces the attack vector because users only log in via a specific channel. 
 
 
-## What are the options for OpenShift AuthZ?
-OpenShift can be used as an Identity Provider for major SSO's to grant read or write access. OpenShift Container Plaform master Includes a built-in OAuth server. 
-Users obtain OAuth access tokens to authenticate themselves to the API. When a person requests a new OAuth token, the OAuth server uses the configured identity provider to determine the identity of the person making the request. It then determines what user that identity maps to, creates an access token for that user, and returns the token for use. Every request for an OAuth token must specify the OAuth client that will receive and use the token. In this document we will understand how OpenShift can be used as a Identity Provider using RHSSO as a Identity Broker. 
+## What are the options for OpenShift AuthN/AuthZ?
+OpenShift can be used as an identity provider with custom access permissions configured. OpenShift Container Plaform master includes a built-in OAuth server. 
+Users/apps obtain OAuth access tokens to authenticate themselves to the API. 
+
+When a new OAuth token is requested, the OAuth server uses the configured identity provider to determine the identity of the person/app making the request and maps a role binding to that identity. This role binding determines what access that person/app is allowed and an associated access token is returned. Every request for an OAuth token must specify the OAuth client that will receive and use the token. This blog focuses on using OpenShift as an identity provider and RHSSO operator as an identity broker. 
 
 ## Hands-On: SSO using RHSSO operator for ArgoCD apps
 
