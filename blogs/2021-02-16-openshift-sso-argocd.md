@@ -18,8 +18,9 @@ This is a demo-heavy blog. Readers of this blog will get an idea about why SSO i
 [SSO](https://developers.redhat.com/blog/2016/10/04/how-red-hat-re-designed-its-single-sign-on-sso-architecture-and-why/) is the preferred, if not the only, way of authentication for most enterprise applications. From the user perspective, SSO offers speed and convenience i.e. you only need to authenticate once. The most important consideration from the business is the security SSO offers. SSO reduces the attack vector because users only log in via a specific channel. 
 
 
-## What are you options for OpenShift AuthN/AuthZ?
-
+## What are the options for OpenShift AuthZ?
+OpenShift can be used as an Identity Provider for major SSO's to grant read or write access. OpenShift Container Plaform master Includes a built-in OAuth server. 
+Users obtain OAuth access tokens to authenticate themselves to the API. When a person requests a new OAuth token, the OAuth server uses the configured identity provider to determine the identity of the person making the request. It then determines what user that identity maps to, creates an access token for that user, and returns the token for use. Every request for an OAuth token must specify the OAuth client that will receive and use the token. In this document we will understand how OpenShift can be used as a Identity Provider using RHSSO as a Identity Broker. 
 
 ## Hands-On: SSO using RHSSO operator for ArgoCD apps
 
