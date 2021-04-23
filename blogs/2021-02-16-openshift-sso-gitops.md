@@ -29,7 +29,8 @@ When a new OAuth token is requested, the OAuth server uses the configured identi
 ### Pre-requisites
 - OpenShift 4.X cluster
 - Installation of the following operators
-  - Red Hat Single Sign-On (RHSSO) Operator
+  - Red Hat Single Sign-On (RHSSO) Operator installed under 'Keycloak' namespace
+    - Existing Keycloak realm and access to Keycloak Admin dashboard
   - Red Hat OpenShift GitOps 
 
 You can install the RHSSO operator under `keycloak` namespace and can use all other default settings when installing the above operators.
@@ -60,6 +61,8 @@ Client ID: `ArgoCD`
 Client Protocol: `openid-connect`
 
 Route URL: `<ArgoCD server route obtained in step 1>`
+
+Once you click **Save**, a lot of other options will apear. Select:
 
 Access Type: `confidential`
 
@@ -187,6 +190,8 @@ Client Secret: `12345` (this can be any value you choose but has to match the va
 
 Display Name: `Login with OpenShift`
 
+Default Scopes: `user:full`
+
 9. Registering an OAuth client
 
 Execute the following YAML to register your OAuth client:
@@ -208,9 +213,11 @@ If the user has not granted access to this client, the grantMethod determines wh
 
 At this point, you should be seeing a **Login with OpenShift** button on your ArgoCD server UI and be able to use your OpenShift credentials to log in to the ArgoCD server UI.
 
+* Troubleshooting: You might have to use an incognito window to avoid errors related to caching
+
 If you already have an OpenShift user created, you can skip step 10.
 
-10. Creating an OpenShift user via htpasswd (optional)
+1.  Creating an OpenShift user via htpasswd (optional)
 
 a. Create a password `12345` for the user `dewan` and stores this info to the file `htpasswd`
 ```
@@ -268,7 +275,7 @@ So you need to go back to Keycloak server and add the user (*dewan*) to appropri
 
 Role-based access control (RBAC) allows you to provide relevant permissions to users.
 
-a. In the Keycloak dashboard, navigate to **Users** → **Groups**. Add the user (*dewan*) to the Keycloak group `ArgoCDAdmins`.
+a. In the Keycloak dashboard, navigate to **Users** → **< your-user >** ->  **Groups**. Add the user (*dewan*) to the Keycloak group `ArgoCDAdmins`.
 
 b. Ensure that `ArgoCDAdmins` group has the required permissions in the `argocd-rbac` config map.
 
