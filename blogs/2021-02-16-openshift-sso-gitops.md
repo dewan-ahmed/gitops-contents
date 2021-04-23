@@ -260,6 +260,8 @@ Once you login to ArgoCD with <dewan> (or your own) user, you will fail to creat
 
 ![fail-app-create](../assets/images/rhsso-argocd/fail-app-create.png)
 
+![spongebob-cry](https://media.giphy.com/media/BEob5qwFkSJ7G/source.gif)
+
 So you need to go back to Keycloak server and add the user (*dewan*) to appropriate groups(`ArgoCDAdmins` in this case).
 
 13. Configure groups and ArgoCD RBAC
