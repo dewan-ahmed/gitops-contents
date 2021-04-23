@@ -11,11 +11,11 @@ tags:
   - gitops
 ---
 
-This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On(RHSSO)](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [ArgoCD](https://argoproj.github.io/argo-cd/) application.
+This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On(RHSSO)](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [Argo CD](https://argoproj.github.io/argo-cd/) application.
 
 ## Why SSO?
 
-[SSO](https://developers.redhat.com/blog/2016/10/04/how-red-hat-re-designed-its-single-sign-on-sso-architecture-and-why/) is the preferred, if not the only, way of authentication for most enterprise applications. From the user perspective, SSO offers speed and convenience i.e. you only need to authenticate once. The most important consideration from the business is the security SSO offers. SSO reduces the attack vector because users only log in via a specific channel. 
+[Single-Sign-On (SSO)](https://developers.redhat.com/blog/2016/10/04/how-red-hat-re-designed-its-single-sign-on-sso-architecture-and-why/) is the preferred, if not the only, way of authentication for most enterprise applications. From the user perspective, SSO offers speed and convenience i.e. you only need to authenticate once. The most important consideration from the business perspective is the security SSO offers. SSO reduces the attack vector because users only log in via a specific channel and authorized accounts can be managed in a single place. 
 
 
 ## What are the options for OpenShift AuthN/AuthZ?
@@ -24,14 +24,15 @@ Users/apps obtain OAuth access tokens to authenticate themselves to the API.
 
 When a new OAuth token is requested, the OAuth server uses the configured identity provider to determine the identity of the person/app making the request and maps a role binding to that identity. This role binding determines what access that person/app is allowed and an associated access token is returned. Every request for an OAuth token must specify the OAuth client that will receive and use the token. This blog focuses on using OpenShift as an identity provider and RHSSO operator as an identity broker. 
 
-## Hands-On: SSO using RHSSO operator for ArgoCD apps
+## Hands-On: SSO using RHSSO operator for Argo CD apps
 
 ### Pre-requisites
 - OpenShift 4.X cluster
+- Installation of `oc` command-line tool
 - Installation of the following operators
-  - Red Hat Single Sign-On (RHSSO) Operator installed under 'Keycloak' namespace
+  - Red Hat Single Sign-On (RHSSO) Operator v7.4.6 installed under 'Keycloak' namespace
     - Existing Keycloak realm and access to Keycloak Admin dashboard
-  - Red Hat OpenShift GitOps 
+  - Red Hat OpenShift GitOps Operator v1.1.0
 
 You can install the RHSSO operator under `keycloak` namespace and can use all other default settings when installing the above operators.
 
@@ -39,13 +40,13 @@ You can install the RHSSO operator under `keycloak` namespace and can use all ot
 
 Connect to your OpenShift 4.X cluster from command-line so that you can execute `oc` commands.
 
-1. Finding your ArgoCD server route:
+1. Finding your Argo CD server route:
 
 ```
 oc get route <instance-name>-server -n <namespace>
 ```
 
-For example, for the out-of-the-box (OOTB) ArgoCD instance under openshift-gitops namespace, the command to find the ArgoCD server route is:
+For example, for the out-of-the-box (OOTB) Argo CD instance under openshift-gitops namespace, the command to find the Argo CD server route is:
 
 ```
 oc get route openshift-gitops-server -n openshift-gitops
@@ -56,21 +57,15 @@ oc get route openshift-gitops-server -n openshift-gitops
 
 Log in to your Keycloak server, select the realm you want to use, navigate to the **Clients** page, and then click the **Create** button in the upper-right section of the screen. Use the following values
 
-Client ID: `ArgoCD`
+![adding ArgoCD client](../assets/images/rhsso-argocd/adding-argocd-client.png)
 
-Client Protocol: `openid-connect`
+Be sure to change the root URL to your ArgoCD server URL. Once you click `Save`, configure the client according to the following:
 
-Route URL: `<ArgoCD server route obtained in step 1>`
+![configuring ArgoCD client](../assets/images/rhsso-argocd/argocd-client-configuration.png)
 
-Once you click **Save**, a lot of other options will apear. Select:
+If you've filled-out the **Root URL** before, some of the fields would be pre-populated. The important fields to note are the **Access Type** which is set to `confidential` and **Base URL** which is set to `/applications`.
 
-Access Type: `confidential`
-
-Valid Redirect URIs: `<ArgoCD server route obtained in step 1>/auth/callback`
-
-Base URL: `/applications`
-
-Click **Save** and you'll see a new tab being generated called **Credentials**. Copy this credential for now which will be used in a later section.
+Make sure to click `Save`. You should now have a new tab called **Credentials**. You can copy the `Secret` that will be required in a later step.
 
 3. Configuring the **groups** claim
 
@@ -84,7 +79,7 @@ Once you've created the client scope you can now add a **Token Mapper** which wi
 
 ![create protocol mapper](../assets/images/rhsso-argocd/create-protocol-mapper.png)
 
-You can now configure the client to provide the `groups` scope. You can now assign the groups scope either to the `Assigned Default Client Scopes` or to the `Assigned Optional Client Scopes`. If you put it in the Optional category you will need to make sure that ArgoCD requests the scope in it's OIDC configuration. Let's use `Assigned Default Client Scopes` by navigating to **Clients** → **Client Scopes**, selecting `groups` from the **Available Client Scopes** and clicking `Add selected` option. The groups scope must be in the **Available Client Scopes** table.
+You can now configure the client to provide the `groups` scope. You can now assign the groups scope either to the `Assigned Default Client Scopes` or to the `Assigned Optional Client Scopes`. If you put it in the Optional category you will need to make sure that Argo CD requests the scope in it's OIDC configuration. Let's use `Assigned Default Client Scopes` by navigating to **Clients** → **Client Scopes**, selecting `groups` from the **Available Client Scopes** and clicking `Add selected` option. The groups scope must be in the **Available Client Scopes** table.
 
 ![assign default client scope](../assets/images/rhsso-argocd/add-default-client-scopes.png)
 
@@ -92,7 +87,7 @@ You can now configure the client to provide the `groups` scope. You can now assi
 
 Navigate to **Groups** and create a group called `ArgoCDAdmins`
 
-5. Configuring ArgoCD OIDC
+5. Configuring Argo CD OIDC
 
 To configure Argo CD OpenID Connect (OIDC), you must generate your client secret, encode it, and add it to your custom resource.
 
@@ -102,9 +97,9 @@ Create a group called `ArgoCDAdmins` and have your current user join the group.
 
 ![ArgoCDAdmins](../assets/images/rhsso-argocd/ArgoCDAdmins.png)
 
-7. Configuring ArgoCD OIDC
+7. Configuring Argo CD OIDC
 
-To configure ArgoCD OpenID Connect (OIDC), you must encode your existing client secret (or generate the client secret if you don't have it already), and add it to your custom resource.
+To configure Argo CD OpenID Connect (OIDC), you must encode your existing client secret (or generate the client secret if you don't have it already), and add it to your custom resource.
 
 a. First you'll need to encode the client secret in base64:
 ```
@@ -122,17 +117,17 @@ Example YAML of the secret:
 ```
 yaml apiVersion: v1
 kind: Secret
-metadata: name: argocd-secret
+metadata: name: Argo CD-secret
 data:
   oidc.keycloak.clientSecret: ODMwODM5NTgtOGVjNi00N2IwLWE0MTEtYThjNTUzODFmYmQy …
 ```
-b. Next, edit the ArgoCD custom resource and add the OIDC configuration to enable the Keycloak authentication:
+b. Next, edit the Argo CD custom resource and add the OIDC configuration to enable the Keycloak authentication:
 
 ```
 oc edit argocd -n <your_namespace>
 ```
 
-Example of ArgoCD custom resource:
+Example of Argo CD custom resource:
 
 
 ```
@@ -211,7 +206,7 @@ grantMethod: prompt
 
 If the user has not granted access to this client, the grantMethod determines which action to take when this client requests tokens. Specify `auto` to automatically approve the grant and retry the request, or `prompt` to prompt the user to approve or deny the grant.
 
-At this point, you should be seeing a **Login with OpenShift** button on your ArgoCD server UI and be able to use your OpenShift credentials to log in to the ArgoCD server UI.
+At this point, you should be seeing a **Login with OpenShift** button on your Argo CD server UI and be able to use your OpenShift credentials to log in to the Argo CD server UI.
 
 * Troubleshooting: You might have to use an incognito window to avoid errors related to caching
 
@@ -253,9 +248,9 @@ Execute:
  oc apply -f htpasswd-cr.yaml
 ```
 
-11.  Log in to ArgoCD using OpenShift
+11.  Log in to Argo CD using OpenShift
 
-Navigate to your ArgoCD server URL (you might need to open this in an incognito window to avoid caching). Once you click **LOGIN VIA OPENSHIFT**, you'll be taken to a keycloak page with a button **OPENSHIFT LOGIN**. Click this button and you'll be redirected to your openshift login page where you can use `dewan/12345` credential (or your existing credential) to log in (configured via htpasswd).
+Navigate to your Argo CD server URL (you might need to open this in an incognito window to avoid caching). Once you click **LOGIN VIA OPENSHIFT**, you'll be taken to a keycloak page with a button **OPENSHIFT LOGIN**. Click this button and you'll be redirected to your openshift login page where you can use `dewan/12345` credential (or your existing credential) to log in (configured via htpasswd).
 
 ![authorize-access](../assets/images/rhsso-argocd/authorize-access.png)
 
@@ -263,7 +258,7 @@ You will need to authorize access for the first time.
 
 12. Done? Not quite yet!
 
-Once you login to ArgoCD with <dewan> (or your own) user, you will fail to create a new ArgoCD application because ArgoCD RBAC grants permissions to the user on the basis of which group does it belong to on Keycloak. In the previous steps, you created openshift-v4  as Identity Provider in Keycloak but unfortunately Keycloak does not read the group claims or group information from OpenShift.
+Once you login to Argo CD server with <dewan> (or your own) user, you will fail to create a new Argo CD application because Argo CD RBAC grants permissions to the user on the basis of which group does it belong to on Keycloak. In the previous steps, you created openshift-v4  as Identity Provider in Keycloak but unfortunately Keycloak does not read the group claims or group information from OpenShift.
 
 ![fail-app-create](../assets/images/rhsso-argocd/fail-app-create.png)
 
@@ -271,7 +266,7 @@ Once you login to ArgoCD with <dewan> (or your own) user, you will fail to creat
 
 So you need to go back to Keycloak server and add the user (*dewan*) to appropriate groups(`ArgoCDAdmins` in this case).
 
-13. Configure groups and ArgoCD RBAC
+13. Configure groups and Argo CD RBAC
 
 Role-based access control (RBAC) allows you to provide relevant permissions to users.
 
@@ -295,11 +290,11 @@ data:
     g, ArgoCDAdmins, role:admin
 ```
 
-That's it! Now your user (*dewan*) can successfully create ArgoCD applications and perform other actions. A table is provided in the reference section that lists built-in permissions for ArgoCD
+That's it! Now your user (*dewan*) can successfully create Argo CD applications and perform other actions. A table is provided in the reference section that lists built-in permissions for Argo CD.
 
 ## Reference
 
-This section lists the permissions that are granted to ArgoCD to manage specific cluster-scoped resources which include platform operators, optional OLM operators, and user management. Note that ArgoCD is not granted cluster-admin permissions.
+This section lists the permissions that are granted to Argo CD to manage specific cluster-scoped resources which include platform operators, optional OLM operators, and user management. Note that Argo CD is not granted cluster-admin permissions.
 
 |   |   |
 |---|---|
