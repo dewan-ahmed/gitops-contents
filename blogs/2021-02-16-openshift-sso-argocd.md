@@ -50,10 +50,6 @@ RHSSO Operator uses KeycloakRealm Custom Resources to create and manage Realm re
 oc apply -n keycloak -f https://raw.githubusercontent.com/keycloak/keycloak-quickstarts/latest/operator-examples/myrealm.yaml
 ```
 
-The following command will create a new User within Keycloak Realm matched by realmSelector. The newly created User will have username set to "myuser" and password set to "12345":
-```
-oc -n keycloak apply -f https://raw.githubusercontent.com/keycloak/keycloak-quickstarts/latest/operator-examples/myuser.yaml
-```
 2. Access the Keycloak admin console
 
 Before logging into the Keycloak Admin Console, you need to check what is the Admin Username and Password:
@@ -84,7 +80,7 @@ For the pre-created ArgoCD instance under openshift-gitops project, find the pas
 
 - Switch to the developer perspective
 - Navigate to the “openshift-gitops” project
-- Go to “Secrets” tab and find the secret `<argocd-instance-name>-cluster` e.g. “argocd-cluster-cluster” in this case
+- Go to “Secrets” tab and find the secret `<argocd-instance-name>-cluster` e.g. “openshift-gitops-cluster” in this case
 
 ![Accessing the secret - step1](../assets/images/rhsso-argocd/access-secret-1.png)
 
