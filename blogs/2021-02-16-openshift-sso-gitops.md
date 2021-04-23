@@ -77,7 +77,7 @@ To manage users in Argo CD, you must configure a **groups** claim that can be in
 
 ![add client scopes](../assets/images/rhsso-argocd/add-client-scopes.png)
 
-Once you've created the client scope you can now add a **Token Mapper** which will add the groups claim to the token when the client requests the groups scope. Make sure to set the **Name** as well as the **Token Claim Name** to `groups` and the **Mapper Type** as `Group Membership`.
+Once you've created the client scope you can now add a **Token Mapper** which will add the groups claim to the token when the client requests the groups scope. Make sure to set the **Name** as well as the **Token Claim Name** to `groups`, the **Mapper Type** as `Group Membership` and **Full group path** `OFF`.
 
 ![create protocol mapper](../assets/images/rhsso-argocd/create-protocol-mapper.png)
 
