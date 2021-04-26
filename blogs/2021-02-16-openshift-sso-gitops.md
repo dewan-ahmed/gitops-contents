@@ -2,6 +2,7 @@
 title: "SSO integration for OpenShift GitOps operator"
 date: 2021-02-16T00:00:00-04:00
 draft: true
+authors: Dewan Ahmed & Abhishek Veeramalla 
 categories:
   - Blog
 tags:
