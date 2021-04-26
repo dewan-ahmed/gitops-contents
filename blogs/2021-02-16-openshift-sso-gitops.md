@@ -11,7 +11,7 @@ tags:
   - gitops
 ---
 
-This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On(RHSSO)](https://access.redhat.com/products/red-hat-single-sign-on) operator to log in to an [Argo CD](https://argoproj.github.io/argo-cd/) application.
+This is a demo-heavy blog. Readers of this blog will get an idea about why SSO is important, how OpenShift handles authN/authZ and a step-by-step guide on using [Red Hat Single Sign-On(RHSSO)](https://access.redhat.com/products/red-hat-single-sign-on) to log in to an [Argo CD](https://argoproj.github.io/argo-cd/) application.
 
 ## Why SSO?
 
@@ -290,9 +290,9 @@ data:
     g, ArgoCDAdmins, role:admin
 ```
 
-That's it! Now your user (*dewan*) can successfully create Argo CD applications and perform other actions. A table is provided in the reference section that lists built-in permissions for Argo CD.
+That's it! Now your user (*dewan*) can successfully create Argo CD applications and perform other actions. A table is provided in the appendix section that lists built-in permissions for Argo CD.
 
-## Reference
+## Appendix
 
 This section lists the permissions that are granted to Argo CD to manage specific cluster-scoped resources which include platform operators, optional OLM operators, and user management. Note that Argo CD is not granted cluster-admin permissions.
 
